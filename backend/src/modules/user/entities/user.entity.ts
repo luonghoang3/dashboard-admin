@@ -2,8 +2,9 @@ import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateCol
 import { Exclude } from 'class-transformer';
 import { Team } from '../../team/entities/team.entity';
 
-enum UserRole {
+export enum UserRole {
   ADMIN = 'admin',
+  MANAGER = 'manager',
   USER = 'user',
 }
 

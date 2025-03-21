@@ -1,8 +1,8 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User } from '../entities/user.entity';
+import { User, UserRole } from '../entities/user.entity';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
 
@@ -47,9 +47,26 @@ export class UserService {
     // Mã hóa mật khẩu
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
 
-    // Tạo người dùng mới
+    // Xác định role từ dữ liệu đầu vào
+    let userRole: UserRole;
+    switch (createUserDto.role) {
+      case 'admin':
+        userRole = UserRole.ADMIN;
+        break;
+      case 'manager':
+        userRole = UserRole.MANAGER;
+        break;
+      default:
+        userRole = UserRole.USER;
+    }
+
+    // Tạo người dùng mới với chuyển đổi role từ string sang enum
     const newUser = this.usersRepository.create({
-      ...createUserDto,
+      username: createUserDto.username,
+      email: createUserDto.email,
+      fullName: createUserDto.fullName,
+      avatar: createUserDto.avatar,
+      role: userRole,
       password: hashedPassword,
     });
 
@@ -61,11 +78,24 @@ export class UserService {
 
     // Kiểm tra tên đăng nhập hoặc email nếu được cập nhật
     if (updateUserDto.username || updateUserDto.email) {
+      const conditions = [];
+      
+      if (updateUserDto.username) {
+        conditions.push({
+          username: updateUserDto.username,
+          id: Not(id)
+        });
+      }
+      
+      if (updateUserDto.email) {
+        conditions.push({
+          email: updateUserDto.email,
+          id: Not(id)
+        });
+      }
+      
       const userExists = await this.usersRepository.findOne({
-        where: [
-          { username: updateUserDto.username, id: { $ne: id } },
-          { email: updateUserDto.email, id: { $ne: id } },
-        ],
+        where: conditions,
       });
 
       if (userExists) {
@@ -76,6 +106,20 @@ export class UserService {
     // Mã hóa mật khẩu nếu được cập nhật
     if (updateUserDto.password) {
       updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
+    }
+
+    // Xử lý role nếu được cập nhật
+    if (updateUserDto.role) {
+      switch (updateUserDto.role) {
+        case 'admin':
+          updateUserDto.role = UserRole.ADMIN;
+          break;
+        case 'manager':
+          updateUserDto.role = UserRole.MANAGER;
+          break;
+        default:
+          updateUserDto.role = UserRole.USER;
+      }
     }
 
     // Cập nhật thông tin người dùng

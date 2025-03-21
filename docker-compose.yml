@@ -15,6 +15,11 @@ services:
       - "5432:5432"
     networks:
       - dashboard-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.3'
+          memory: 256M
 
   redis:
     image: redis:7
@@ -26,6 +31,11 @@ services:
       - redis_data:/data
     networks:
       - dashboard-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 128M
 
   backend:
     build:
@@ -57,6 +67,11 @@ services:
     networks:
       - dashboard-network
     command: npm run start:dev
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
 
   frontend:
     build:
@@ -79,6 +94,11 @@ services:
     networks:
       - dashboard-network
     command: npm run dev
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
 
 networks:
   dashboard-network:

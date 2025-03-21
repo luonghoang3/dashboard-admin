@@ -23,7 +23,7 @@ export class CreateUserDto {
   @IsString({ message: 'Tên đầy đủ phải là chuỗi' })
   fullName: string;
 
-  @ApiProperty({ example: 'admin', description: 'Vai trò', enum: ['admin', 'user'] })
+  @ApiProperty({ example: 'admin', description: 'Vai trò', enum: ['admin', 'manager', 'user'] })
   @IsNotEmpty({ message: 'Vai trò không được để trống' })
   @IsString({ message: 'Vai trò phải là chuỗi' })
   role: string;

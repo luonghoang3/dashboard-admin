@@ -41,7 +41,7 @@ __decorate([
     __metadata("design:type", String)
 ], CreateUserDto.prototype, "fullName", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'admin', description: 'Vai trò', enum: ['admin', 'user'] }),
+    (0, swagger_1.ApiProperty)({ example: 'admin', description: 'Vai trò', enum: ['admin', 'manager', 'user'] }),
     (0, class_validator_1.IsNotEmpty)({ message: 'Vai trò không được để trống' }),
     (0, class_validator_1.IsString)({ message: 'Vai trò phải là chuỗi' }),
     __metadata("design:type", String)

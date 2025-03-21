@@ -1,6 +1,7 @@
 import { Team } from '../../team/entities/team.entity';
-declare enum UserRole {
+export declare enum UserRole {
     ADMIN = "admin",
+    MANAGER = "manager",
     USER = "user"
 }
 export declare class User {
@@ -16,4 +17,3 @@ export declare class User {
     updatedAt: Date;
     teams: Team[];
 }
-export {};

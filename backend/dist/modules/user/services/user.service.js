@@ -79,8 +79,23 @@ let UserService = class UserService {
             throw new common_1.ConflictException('Tên đăng nhập hoặc email đã tồn tại');
         }
         const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+        let userRole;
+        switch (createUserDto.role) {
+            case 'admin':
+                userRole = user_entity_1.UserRole.ADMIN;
+                break;
+            case 'manager':
+                userRole = user_entity_1.UserRole.MANAGER;
+                break;
+            default:
+                userRole = user_entity_1.UserRole.USER;
+        }
         const newUser = this.usersRepository.create({
-            ...createUserDto,
+            username: createUserDto.username,
+            email: createUserDto.email,
+            fullName: createUserDto.fullName,
+            avatar: createUserDto.avatar,
+            role: userRole,
             password: hashedPassword,
         });
         return this.usersRepository.save(newUser);
@@ -88,11 +103,21 @@ let UserService = class UserService {
     async update(id, updateUserDto) {
         const user = await this.findById(id);
         if (updateUserDto.username || updateUserDto.email) {
+            const conditions = [];
+            if (updateUserDto.username) {
+                conditions.push({
+                    username: updateUserDto.username,
+                    id: (0, typeorm_2.Not)(id)
+                });
+            }
+            if (updateUserDto.email) {
+                conditions.push({
+                    email: updateUserDto.email,
+                    id: (0, typeorm_2.Not)(id)
+                });
+            }
             const userExists = await this.usersRepository.findOne({
-                where: [
-                    { username: updateUserDto.username, id: { $ne: id } },
-                    { email: updateUserDto.email, id: { $ne: id } },
-                ],
+                where: conditions,
             });
             if (userExists) {
                 throw new common_1.ConflictException('Tên đăng nhập hoặc email đã tồn tại');
@@ -100,6 +125,18 @@ let UserService = class UserService {
         }
         if (updateUserDto.password) {
             updateUserDto.password = await bcrypt.hash(updateUserDto.password, 10);
+        }
+        if (updateUserDto.role) {
+            switch (updateUserDto.role) {
+                case 'admin':
+                    updateUserDto.role = user_entity_1.UserRole.ADMIN;
+                    break;
+                case 'manager':
+                    updateUserDto.role = user_entity_1.UserRole.MANAGER;
+                    break;
+                default:
+                    updateUserDto.role = user_entity_1.UserRole.USER;
+            }
         }
         Object.assign(user, updateUserDto);
         return this.usersRepository.save(user);

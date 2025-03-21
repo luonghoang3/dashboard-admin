@@ -1,12 +1,13 @@
+import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import './globals.css';
+import ClientProviders from './providers';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Dashboard Admin',
-  description: 'Dashboard Admin nội bộ xây dựng trên Next.js, NestJS, PostgreSQL và Docker',
+  description: 'Quản lý dữ liệu nội bộ',
 };
 
 export default function RootLayout({
@@ -17,7 +18,9 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body className={inter.className}>
-        {children}
+        <ClientProviders>
+          {children}
+        </ClientProviders>
       </body>
     </html>
   );

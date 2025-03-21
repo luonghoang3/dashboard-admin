@@ -41,7 +41,7 @@ __decorate([
     __metadata("design:type", String)
 ], UpdateUserDto.prototype, "fullName", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ example: 'user', description: 'Vai trò', enum: ['admin', 'user'], required: false }),
+    (0, swagger_1.ApiProperty)({ example: 'user', description: 'Vai trò', enum: ['admin', 'manager', 'user'], required: false }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)({ message: 'Vai trò phải là chuỗi' }),
     __metadata("design:type", String)

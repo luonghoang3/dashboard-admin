@@ -23,7 +23,7 @@ export class UpdateUserDto {
   @IsString({ message: 'Tên đầy đủ phải là chuỗi' })
   fullName?: string;
 
-  @ApiProperty({ example: 'user', description: 'Vai trò', enum: ['admin', 'user'], required: false })
+  @ApiProperty({ example: 'user', description: 'Vai trò', enum: ['admin', 'manager', 'user'], required: false })
   @IsOptional()
   @IsString({ message: 'Vai trò phải là chuỗi' })
   role?: string;
