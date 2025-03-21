@@ -10,7 +10,7 @@ interface User {
   email: string;
   fullName: string;
   role: string;
-  avatar?: string;
+  avatar?: string | null;
 }
 
 interface AuthContextType {
@@ -39,51 +39,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  // Kiểm tra nếu người dùng đã đăng nhập
+  // Kiểm tra trạng thái xác thực khi khởi tạo
   useEffect(() => {
-    const storedToken = authService.getToken();
-    if (storedToken) {
-      setToken(storedToken);
-      fetchUserProfile(storedToken);
-    } else {
-      setIsLoading(false);
-    }
-  }, []);
+    console.log('AuthProvider initializing...');
+    
+    const checkAuthentication = async () => {
+      try {
+        // Lấy token từ localStorage hoặc cookie
+        const storedToken = authService.getToken();
+        
+        if (!storedToken) {
+          console.log('No token found, user not authenticated');
+          setIsLoading(false);
+          return;
+        }
+        
+        console.log('Token found, setting token state');
+        setToken(storedToken);
+        
+        // Lấy thông tin user profile
+        try {
+          console.log('Fetching user profile with token');
+          const userData = await authService.getProfile(storedToken);
+          console.log('User profile fetched successfully');
+          setUser(userData);
+        } catch (error) {
+          console.error('Failed to fetch user profile:', error);
+          // Nếu token không hợp lệ, xóa token
+          authService.removeToken();
+          setToken(null);
+        }
+      } catch (error) {
+        console.error('Auth check error:', error);
+      } finally {
+        setIsLoading(false);
+        console.log('AuthProvider initialization complete');
+      }
+    };
 
-  const fetchUserProfile = async (authToken: string) => {
-    try {
-      const userData = await authService.getProfile(authToken);
-      setUser(userData);
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      authService.removeToken();
-      setToken(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    checkAuthentication();
+  }, []);
 
   const login = async (username: string, password: string) => {
     setIsLoading(true);
+    console.log('Login process started in AuthContext');
+    
     try {
-      console.log('Gọi API login với username:', username);
       const data = await authService.login(username, password);
-      console.log('Kết quả login thành công:', data);
-      const { accessToken, user: userData } = data;
-
-      // Lưu token vào cookies và localStorage
-      authService.setToken(accessToken);
+      console.log('Login API call succeeded, got data:', data?.user?.username);
       
-      // Cập nhật state
-      setToken(accessToken);
-      setUser(userData);
-
-      console.log('Đã lưu token và user, chuẩn bị chuyển hướng...');
+      // Lưu token - đã được lưu trong authService.login
+      setToken(data.accessToken);
       
-      // Chuyển hướng đến trang Dashboard sử dụng location thay vì router
-      window.location.href = '/dashboard';
+      // Cập nhật thông tin user
+      setUser(data.user);
+      
+      console.log('Login process completed successfully');
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login failed in AuthContext:', error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -91,6 +104,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    console.log('Logging out user');
+    
     // Xóa token
     authService.removeToken();
     
@@ -98,8 +113,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(null);
     setUser(null);
     
-    // Chuyển hướng đến trang đăng nhập
-    router.push('/login');
+    console.log('User logged out, redirecting to login page');
+    
+    // Chuyển hướng đến trang đăng nhập - sử dụng window.location để refresh
+    window.location.href = '/login';
   };
 
   const checkAuth = async (): Promise<boolean> => {
@@ -113,10 +130,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Debug output
+  console.log('AuthContext state:', {
+    isAuthenticated: !!token && !!user,
+    hasToken: !!token,
+    hasUser: !!user,
+    isLoading
+  });
+
   const value = {
     user,
     token,
-    isAuthenticated: !!token,
+    isAuthenticated: !!token && !!user,
     isLoading,
     login,
     logout,

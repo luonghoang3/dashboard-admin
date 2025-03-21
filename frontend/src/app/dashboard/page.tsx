@@ -1,9 +1,54 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '../../modules/auth/context/AuthContext';
+import { useRouter } from 'next/navigation';
+
 export default function DashboardPage() {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const router = useRouter();
+  const [isPageReady, setIsPageReady] = useState(false);
+
+  // Xử lý chuyển hướng và hiển thị
+  useEffect(() => {
+    // Nếu đang tải, chưa làm gì cả
+    if (isLoading) {
+      console.log('Still loading auth state...');
+      return;
+    }
+
+    // Nếu không xác thực, chuyển hướng về trang đăng nhập
+    if (!isAuthenticated) {
+      console.log('User not authenticated, redirecting to login...');
+      router.replace('/login?redirect=/dashboard');
+      return;
+    }
+
+    // Nếu đã xác thực và hoàn tất tải, hiển thị trang
+    console.log('User authenticated, showing dashboard');
+    setIsPageReady(true);
+  }, [isAuthenticated, isLoading, router]);
+
+  // Hiển thị trạng thái đang tải
+  if (isLoading || !isPageReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-xl">Đang tải...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          {user && (
+            <div className="text-right">
+              <p className="text-sm text-gray-600">Xin chào, {user.fullName || user.username}</p>
+              <p className="text-xs text-gray-500">Vai trò: {user.role}</p>
+            </div>
+          )}
         </div>
       </header>
       <main>

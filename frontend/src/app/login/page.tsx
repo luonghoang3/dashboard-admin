@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/modules/auth/context/AuthContext';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../modules/auth/context/AuthContext';
 import { useSearchParams, useRouter } from 'next/navigation';
 
 export default function LoginPage() {
@@ -13,22 +13,25 @@ export default function LoginPage() {
   const { login, isAuthenticated } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const redirect = searchParams.get('redirect') || '/dashboard';
+  const redirect = searchParams?.get('redirect') || '/dashboard';
 
   // Kiểm tra nếu đã xác thực thì chuyển hướng
   useEffect(() => {
+    console.log('Login page mounted, isAuthenticated:', isAuthenticated);
     if (isAuthenticated) {
-      console.log('Đã xác thực, chuyển hướng đến:', redirect);
-      window.location.href = redirect;
+      console.log('User is already authenticated, redirecting to:', redirect);
+      window.location.href = redirect; // Dùng window.location để tránh vấn đề cache của router
     }
   }, [isAuthenticated, redirect]);
 
   // Hiển thị thông báo nếu đăng nhập thành công
   useEffect(() => {
     if (loginSuccess) {
+      console.log('Login success, will redirect to:', redirect);
+      // Đợi một chút để đảm bảo state đã được cập nhật
       const timer = setTimeout(() => {
         window.location.href = redirect;
-      }, 1500);
+      }, 800);
       
       return () => clearTimeout(timer);
     }
@@ -40,10 +43,15 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      console.log('Attempting login with username:', username, 'and password:', password ? '******' : 'empty');
+      
       await login(username, password);
+      console.log('Login successful in component');
+      
+      // Đánh dấu đăng nhập thành công để kích hoạt useEffect chuyển hướng
       setLoginSuccess(true);
-      // Chuyển hướng được xử lý trong useEffect
     } catch (err) {
+      console.error('Login error in component:', err);
       setError('Tên đăng nhập hoặc mật khẩu không chính xác');
     } finally {
       setLoading(false);
@@ -91,10 +99,11 @@ export default function LoginPage() {
                   type="text"
                   autoComplete="username"
                   required
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                   placeholder="Tên đăng nhập"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  disabled={loading}
                 />
               </div>
               <div>
@@ -107,47 +116,22 @@ export default function LoginPage() {
                   type="password"
                   autoComplete="current-password"
                   required
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                   placeholder="Mật khẩu"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
                 />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
-                />
-                <label
-                  htmlFor="remember-me"
-                  className="ml-2 block text-sm text-gray-900"
-                >
-                  Ghi nhớ đăng nhập
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a
-                  href="#"
-                  className="font-medium text-primary-600 hover:text-primary-500"
-                >
-                  Quên mật khẩu?
-                </a>
               </div>
             </div>
 
             <div>
               <button
                 type="submit"
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 disabled={loading}
               >
-                {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+                {loading ? 'Đang xử lý...' : 'Đăng nhập'}
               </button>
             </div>
           </form>
