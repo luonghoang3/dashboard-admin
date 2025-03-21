@@ -1,0 +1,464 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Dashboard Admin Project Rules
+
+## 1. Phạm Vi Dự Án
+- **Frontend:** Next.js
+- **Backend:** NestJS
+- **Database:** PostgreSQL
+- **Deployment:** Docker và Docker Compose
+- **Mục tiêu:** Xây dựng một Dashboard Admin nội bộ để quản lý dữ liệu, người dùng, đơn hàng, báo cáo, v.v.
+- **Giới hạn:**  
+  - Chỉ tập trung vào các công nghệ đã định nghĩa (Next.js, NestJS, PostgreSQL, Docker).
+  - Không mở rộng sang các công nghệ khác (ví dụ: Laravel, Django, AI, microservices mở rộng) trừ khi có yêu cầu cụ thể.
+
+## 2. Cấu Trúc Module
+### Giai Đoạn 1: User Module, Team Module và Dashboard
+- **User Module:**
+  - Quản lý người dùng (CRUD) 
+  - Phân quyền và xác thực (Authentication & Authorization)
+  - Quản lý profile: Tên Đăng Nhập , Tên Hiển Thị, Số Điện Thoại, Email, mật khẩu
+  - Lịch sử hoạt động
+  - Đăng nhập/Đăng xuất
+  - Chỉ admin mới có quyền tạo và quản lý tài khoản người dùng
+  - Gán user vào các Team
+
+- **Team Module:**
+  - Quản lý nhóm (CRUD)
+  - Quản lý team name
+  - Quản Lý mô tả team
+
+- **Auth Module:**
+  - Đăng nhập/Đăng xuất
+  - Xác thực JWT
+  - Bảo vệ route
+  - Phân quyền
+
+- **Dashboard Module:**
+  - Thống kê tổng quan
+  - Biểu đồ và báo cáo
+  - Thông báo và cảnh báo
+  - Menu và Navigation
+  - Theme và Layout
+  - Hiển thị thông tin về Users và Teams
+
+### Giai Đoạn 2 (Sau này):
+- **Order Module:**
+  - Quản lý đơn hàng (CRUD)
+  - Trạng thái đơn hàng
+  - Lịch sử đơn hàng
+  - Báo cáo đơn hàng
+
+- **Client Module:**
+  - Quản lý khách hàng (CRUD)
+  - Thông tin doanh nghiệp: Tên Doanh Nghiệp, Địa chỉ, Số Điện Thoại, Email, Mã Số Thuế, Website
+  - Quản lý người liên hệ: Tên, Chức Vụ, Email, Số Điện Thoại
+  - Gán khách hàng vào các Team
+  - Lịch sử tương tác với khách hàng
+  - Phân loại và tìm kiếm khách hàng
+  - Dashboard thống kê khách hàng theo team
+
+- **Common Module:**
+  - Shared components
+  - Shared services
+  - Shared interfaces
+  - Shared utilities
+
+## 3. Hướng Dẫn và Cách Tiếp Cận
+- **Bám sát theo yêu cầu:**  
+  - Mọi hướng dẫn, câu trả lời và code sample phải liên quan trực tiếp đến dự án Dashboard Admin nội bộ.
+  - Tránh thông tin không cần thiết hoặc các chủ đề ngoài phạm vi đã định.
+
+- **Hướng dẫn từng bước rõ ràng:**  
+  - Mỗi bước cần có lệnh cụ thể, ví dụ minh họa (Dockerfile, docker-compose.yml, file cấu hình Next.js, NestJS, v.v.).
+  - Mỗi phần hướng dẫn phải có giải thích ngắn gọn để người dùng dễ hiểu.
+
+- **Đồng bộ cấu hình và biến môi trường:**  
+  - Các biến môi trường như `DATABASE_URL`, `NEXT_PUBLIC_API_URL` phải được khai báo trong các file `.env` hoặc `.env.local` và đồng bộ với cấu hình Docker Compose.
+  - Đảm bảo rằng các file cấu hình (như `next.config.ts`, `src/app.module.ts` trong NestJS) sử dụng các biến này một cách nhất quán.
+
+## 4. Cấu Trúc Thư Mục Dự Án
+Cấu trúc hiện tại của dự án:
+```
+project/
+├── backend/       
+│   ├── src/
+│   │   ├── modules/
+│   │   │   ├── auth/
+│   │   │   │   ├── controllers/
+│   │   │   │   ├── services/
+│   │   │   │   ├── dto/
+│   │   │   │   ├── guards/
+│   │   │   │   ├── strategies/
+│   │   │   │   └── auth.module.ts
+│   │   │   ├── user/
+│   │   │   │   ├── controllers/
+│   │   │   │   ├── services/
+│   │   │   │   ├── entities/
+│   │   │   │   ├── dto/
+│   │   │   │   ├── decorators/
+│   │   │   │   ├── enums/
+│   │   │   │   ├── guards/
+│   │   │   │   └── user.module.ts
+│   │   │   ├── team/
+│   │   │   │   ├── controllers/
+│   │   │   │   ├── services/
+│   │   │   │   ├── entities/
+│   │   │   │   ├── dto/
+│   │   │   │   └── team.module.ts
+│   │   │   ├── client/                    # Client module
+│   │   │   │   ├── controllers/
+│   │   │   │   ├── services/
+│   │   │   │   ├── entities/
+│   │   │   │   │   ├── client.entity.ts
+│   │   │   │   │   ├── contact-person.entity.ts
+│   │   │   │   │   └── client-team.entity.ts
+│   │   │   │   ├── dto/
+│   │   │   │   └── client.module.ts
+│   │   │   └── dashboard/
+│   │   │       ├── controllers/
+│   │   │       ├── services/
+│   │   │       └── dto/
+│   │   ├── types/
+│   │   └── main.ts
+│   └── test/
+├── frontend/      
+│   ├── src/
+│   │   ├── app/                           # App Router structure
+│   │   │   ├── dashboard/                 # Dashboard route
+│   │   │   │   ├── users/                 # Users nested route
+│   │   │   │   │   ├── add/               # Add user route
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── edit/              # Edit user route
+│   │   │   │   │   │   └── [id]/          # Dynamic route
+│   │   │   │   │   │       └── page.tsx
+│   │   │   │   │   ├── view/              # View user route
+│   │   │   │   │   │   └── [id]/          # Dynamic route
+│   │   │   │   │   │       └── page.tsx
+│   │   │   │   │   ├── activities/        # User activities
+│   │   │   │   │   └── page.tsx           # Users list page
+│   │   │   │   ├── teams/                 # Teams nested route
+│   │   │   │   │   ├── add/               # Add team route
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── edit/              # Edit team route
+│   │   │   │   │   │   └── [id]/          # Dynamic route
+│   │   │   │   │   │       └── page.tsx
+│   │   │   │   │   ├── view/              # View team route
+│   │   │   │   │   │   └── [id]/          # Dynamic route
+│   │   │   │   │   │       └── page.tsx
+│   │   │   │   │   └── page.tsx           # Teams list page
+│   │   │   │   ├── clients/               # Clients nested route
+│   │   │   │   │   ├── add/               # Add client route
+│   │   │   │   │   │   └── page.tsx
+│   │   │   │   │   ├── edit/              # Edit client route
+│   │   │   │   │   │   └── [id]/          # Dynamic route
+│   │   │   │   │   │       └── page.tsx
+│   │   │   │   │   ├── view/              # View client route
+│   │   │   │   │   │   └── [id]/          # Dynamic route
+│   │   │   │   │   │       └── page.tsx
+│   │   │   │   │   └── page.tsx           # Clients list page
+│   │   │   │   └── page.tsx               # Dashboard main page
+│   │   │   ├── login/                     # Login page 
+│   │   │   │   └── page.tsx
+│   │   │   ├── logout/                    # Logout page
+│   │   │   │   └── page.tsx
+│   │   │   └── layout.tsx                 # Root layout
+│   │   ├── modules/
+│   │   │   ├── auth/                      # Auth module
+│   │   │   │   └── context/               # Auth context provider
+│   │   │   └── dashboard/                 # Dashboard module
+│   │   │       ├── components/            # Shared dashboard components
+│   │   │       ├── hooks/                 # Dashboard custom hooks
+│   │   │       └── services/              # Dashboard services
+│   │   └── config.ts                      # App configuration
+│   ├── public/                            # Static assets
+│   └── next.config.ts                     # Next.js configuration
+├── docker-compose.yml                     # Docker configuration
+├── .env                                   # Environment variables
+└── temp/                                  # Temporary files for development
+```
+
+- **Lưu ý:** 
+  - Cấu trúc frontend sử dụng Next.js App Router thay vì Pages Router
+  - Module Auth đã được tách riêng khỏi User Module để quản lý xác thực và phân quyền
+  - Mỗi module phải có cấu trúc riêng biệt và độc lập
+  - Tránh việc tạo thư mục lồng (ví dụ: `backend/backend`) để duy trì cấu trúc sạch và rõ ràng
+  - Các module phải tuân thủ nguyên tắc SOLID và DRY
+  - Tập trung hoàn thiện User Module, Team Module, Auth Module và Dashboard trước khi phát triển các module khác
+  - Thiết kế mối quan hệ giữa User và Team với quy trình rõ ràng
+
+## 5. Quan Hệ Entity và Database
+
+- **User Entity:**
+  - Thông tin cơ bản: id, username, password, email, fullName, avatar, role, isActive
+  - Quan hệ nhiều-nhiều với Team (Many-to-Many)
+  - Lưu trữ lịch sử hoạt động (One-to-Many với ActivityLog)
+
+- **Team Entity:**
+  - Thông tin cơ bản: id, name, description, isActive, department
+  - Quan hệ với Team Lead (Many-to-One với User)
+  - Quan hệ nhiều-nhiều với Users (Many-to-Many)
+
+- **UserTeam Entity:**
+  - Quản lý quan hệ giữa User và Team
+  - Lưu trữ metadata: userId, teamId, role trong team, ngày tham gia
+
+- **Client Entity:**
+  - Thông tin cơ bản: 
+    - id: UUID chính
+    - companyName: Tên công ty (không được null)
+    - address: Địa chỉ doanh nghiệp
+    - phone: Số điện thoại công ty
+    - email: Email liên hệ của công ty
+    - taxCode: Mã số thuế
+    - website: Website doanh nghiệp
+    - isActive: Trạng thái hoạt động
+    - createdAt: Ngày tạo
+    - updatedAt: Ngày cập nhật
+  - Quan hệ nhiều-nhiều với Team (Many-to-Many) thông qua bảng ClientTeam
+  - Quan hệ một-nhiều với Contact Persons (One-to-Many)
+  
+- **Contact Person Entity:**
+  - Thông tin cơ bản:
+    - id: UUID chính
+    - name: Tên người liên hệ (không được null)
+    - position: Chức vụ
+    - email: Email người liên hệ
+    - phone: Số điện thoại người liên hệ
+    - isActive: Trạng thái hoạt động
+    - clientId: Khóa ngoại liên kết với Client
+    - createdAt: Ngày tạo
+    - updatedAt: Ngày cập nhật
+  - Quan hệ nhiều-một với Client (Many-to-One): Mỗi người liên hệ thuộc về một Client, một Client có thể có nhiều người liên hệ
+  - Có thể được tạo mới hoặc chọn từ danh sách có sẵn
+
+- **ClientTeam Entity (Bảng liên kết):**
+  - Thông tin cơ bản:
+    - id: UUID chính
+    - clientId: Khóa ngoại liên kết với Client
+    - teamId: Khóa ngoại liên kết với Team
+    - startDate: Ngày bắt đầu hợp tác
+    - notes: Ghi chú về mối quan hệ
+    - createdAt: Ngày tạo
+    - updatedAt: Ngày cập nhật
+  - Quản lý quan hệ nhiều-nhiều giữa Client và Team:
+    - Một Client có thể thuộc về nhiều Team khác nhau
+    - Một Team có thể quản lý nhiều Client khác nhau
+
+## 6. SQL Schema cho Module Client
+
+```sql
+-- Client Table
+CREATE TABLE clients (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  company_name VARCHAR(255) NOT NULL,
+  address TEXT,
+  phone VARCHAR(50),
+  email VARCHAR(255),
+  tax_code VARCHAR(50),
+  website VARCHAR(255),
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Contact Person Table
+CREATE TABLE contact_persons (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(255) NOT NULL,
+  position VARCHAR(100),
+  email VARCHAR(255),
+  phone VARCHAR(50),
+  is_active BOOLEAN DEFAULT TRUE,
+  client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Client-Team Relationship Table
+CREATE TABLE client_teams (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
+  team_id UUID REFERENCES teams(id) ON DELETE CASCADE,
+  start_date DATE DEFAULT CURRENT_DATE,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(client_id, team_id)
+);
+
+-- Indexes
+CREATE INDEX idx_contact_persons_client_id ON contact_persons(client_id);
+CREATE INDEX idx_client_teams_client_id ON client_teams(client_id);
+CREATE INDEX idx_client_teams_team_id ON client_teams(team_id);
+```
+
+## 7. Best Practices về Code và Triển Khai
+- **Code Sample & Cấu Hình:**  
+  - Dockerfile cho Backend và Frontend cần được viết rõ ràng, với các bước: cài đặt dependencies, build, và chạy ứng dụng.
+  - Docker Compose cần liệt kê các service: db (PostgreSQL), backend, frontend; cấu hình cổng, volume và biến môi trường rõ ràng.
+  
+- **Kiểm Tra và Debug:**  
+  - Sau khi triển khai, kiểm tra từng service bằng cách truy cập URL tương ứng (backend: http://localhost:5000, frontend: http://localhost:3000).
+  - Luôn kiểm tra log của các container để phát hiện lỗi sớm và xử lý kịp thời.
+
+- **Bảo Mật:**  
+  - Đảm bảo các biến môi trường nhạy cảm (ví dụ: mật khẩu database) không bị lộ ra ngoài và được lưu trữ cẩn thận.
+  - Cấu hình CORS và các biện pháp bảo mật cơ bản theo best practices của Next.js và NestJS.
+
+## 8. Triển Khai và Kiểm Tra
+- **Deployment:**  
+  - Sử dụng lệnh `docker-compose up --build` để build và chạy toàn bộ hệ thống.
+- **Testing:**  
+  - Backend: Kiểm tra bằng cách truy cập `http://localhost:5000`.
+  - Frontend: Kiểm tra bằng cách truy cập `http://localhost:3000`.
+  - Database: Kiểm tra kết nối thông qua biến môi trường và các công cụ quản lý PostgreSQL.
+
+## 9. Cập Nhật và Điều Chỉnh
+- **Cập nhật:**  
+  - Quy tắc này cần được cập nhật khi có thay đổi về công nghệ hoặc phạm vi dự án.
+- **Không lan man:**  
+  - Chỉ trả lời, hướng dẫn và triển khai các nội dung liên quan đến Dashboard Admin sử dụng Next.js, NestJS và PostgreSQL.
+  - Sau khi code chỉ tóm gọn nội dung đã làm và hướng dẫn sử dụng. Không cần trích dẫn lại code đã điều chỉnh.
+- **Tính nhất quán:**  
+  - Mọi hướng dẫn và code mẫu phải được thống nhất về cấu trúc, biến môi trường và phương pháp triển khai.
+
+## 10. Kết Nối API và Cấu Hình
+
+### Cấu Trúc API Response
+- **Cấu trúc phản hồi từ API Backend:**
+  ```typescript
+  interface ApiResponse<T> {
+    statusCode: number;      // HTTP status code (200, 400, 500, v.v.)
+    message: string;         // Thông báo từ server
+    data: {                  // Dữ liệu thực tế trả về
+      statusCode: number;    // Status code nội bộ 
+      data: T;               // Dữ liệu thực tế theo kiểu generic
+      timestamp?: string;    // Thời gian xử lý
+    };
+    timestamp?: string;      // Thời gian server xử lý
+  }
+  ```
+
+- **TypeScript Interfaces:**
+  - Phải định nghĩa interface cho tất cả các đối tượng JSON trả về từ API
+  - Sử dụng generics (`ApiResponse<T>`) để tăng tính linh hoạt và type-safe
+  - Trích xuất dữ liệu từ cấu trúc lồng nhau trước khi sử dụng:
+    ```typescript
+    const response = await api.get('/users') as ApiResponse<User[]>;
+    if (response && response.data && Array.isArray(response.data.data)) {
+      return response.data.data; // Lấy mảng users từ response
+    }
+    ```
+
+### API Versioning và URL
+- **Versioning:**
+  - Backend sử dụng URL versioning: `/api/v1/[resource]`
+  - Tất cả endpoint phải có tiền tố `/api/v1/` 
+  - Frontend phải tương thích với cấu trúc endpoint này
+
+- **Biến Môi Trường:**
+  - Frontend: `NEXT_PUBLIC_API_URL=http://localhost:5000/api`
+  - Backend: 
+    ```
+    PORT=5000
+    GLOBAL_PREFIX=api
+    API_VERSION=1
+    ```
+
+- **Phương Pháp Tương Thích:**
+  - Sử dụng hàm helper để đảm bảo URL chính xác:
+    ```typescript
+    const getApiUrl = (endpoint: string): string => {
+      // Đảm bảo endpoint bắt đầu bằng /
+      const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+      
+      // Trích xuất URL cơ sở và tự động thêm /v1 nếu chưa có
+      let baseUrl = API_BASE_URL;
+      if (baseUrl.endsWith('/v1')) {
+        baseUrl = baseUrl;
+      } else if (!baseUrl.endsWith('/api')) {
+        baseUrl = baseUrl;
+      } else {
+        baseUrl = `${baseUrl}/v1`;
+      }
+      
+      return `${baseUrl}${path}`;
+    };
+    ```
+
+### Kết Nối Container trong Docker
+- **Network:**
+  - Các container kết nối qua mạng Docker nội bộ có tên `dashboard-network`
+  - Các service có thể truy cập nhau qua hostname (tên container)
+
+- **Endpoint URL:**
+  - Nếu gọi API từ bên trong container: `http://dashboard-api:5000/api/v1/[resource]`
+  - Nếu gọi API từ máy host: `http://localhost:5000/api/v1/[resource]`
+
+- **Biến Môi Trường:**
+  - Trong docker-compose.yml:
+    ```yaml
+    frontend:
+      environment:
+        - NEXT_PUBLIC_API_URL=http://localhost:5000/api
+    ```
+  - Trong .env.local hoặc trực tiếp trong container:
+    ```
+    NEXT_PUBLIC_API_URL=http://dashboard-api:5000/api/v1
+    ```
+
+- **Xử Lý Cross-Origin:
+  - CORS được cấu hình trong NestJS:
+    ```typescript
+    app.enableCors({
+      origin: configService.get('CORS_ORIGIN'),
+      credentials: true,
+    });
+    ```
+  - Giá trị CORS_ORIGIN trong Docker: `http://localhost:3000`
+
+### Service Design Pattern
+- **Thiết kế Service:**
+  - Mỗi entity (User, Team, v.v.) có một service riêng
+  - Các service phải sử dụng interface chung để tương tác với API:
+    ```typescript
+    export const userService = {
+      getUsers: async (): Promise<User[]> => {
+        // Implementation
+      },
+      getUser: async (id: string): Promise<User> => {
+        // Implementation  
+      },
+      // ...more methods
+    };
+    ```
+
+- **Xử Lý Lỗi:**
+  - Các service phải bắt và xử lý lỗi API, không để lỗi lan truyền đến UI:
+    ```typescript
+    try {
+      // API call
+    } catch (error) {
+      console.error('Error processing request:', error);
+      // Return fallback value or throw meaningful error
+    }
+    ```
+
+### Testing và Debug API
+- **API Test Endpoints:**
+  - `/test` route để thử nghiệm kết nối API
+  - Sử dụng console.log trong service để theo dõi request/response:
+    ```typescript
+    console.log(`API GET request to: ${url}`);
+    console.log(`API GET response status: ${response.status}`);
+    ```
+
+- **Debug:**
+  - Kiểm tra logs container với `docker logs dashboard-api` hoặc `docker logs dashboard-web`
+  - Cấu hình middleware logging trong NestJS để ghi lại tất cả requests
+
+--- 
