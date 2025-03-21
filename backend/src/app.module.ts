@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-
-import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { TeamModule } from './modules/team/team.module';
-import { ClientModule } from './modules/client/client.module';
+import { AuthModule } from './modules/auth/auth.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { ClientModule } from './modules/client/client.module';
 
 @Module({
   imports: [
@@ -19,21 +18,23 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        host: configService.get('POSTGRES_HOST'),
-        port: parseInt(configService.get('POSTGRES_PORT'), 10),
-        username: configService.get('POSTGRES_USER'),
-        password: configService.get('POSTGRES_PASSWORD'),
-        database: configService.get('POSTGRES_DB'),
+        host: configService.get('DB_HOST', 'localhost'),
+        port: parseInt(configService.get('DB_PORT', '5432')),
+        username: configService.get('DB_USERNAME', 'postgres'),
+        password: configService.get('DB_PASSWORD', 'postgres'),
+        database: configService.get('DB_DATABASE', 'dashboard_db'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: configService.get('NODE_ENV') === 'development',
-        logging: configService.get('NODE_ENV') === 'development',
+        synchronize: configService.get('DB_SYNCHRONIZE', 'true') === 'true',
+        logging: configService.get('DB_LOGGING', 'false') === 'true',
       }),
     }),
-    AuthModule,
     UserModule,
     TeamModule,
-    ClientModule,
+    AuthModule,
     DashboardModule,
+    ClientModule,
   ],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
