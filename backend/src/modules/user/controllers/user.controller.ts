@@ -8,6 +8,9 @@ import {
   Put,
   UseGuards,
   Query,
+  Request,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
@@ -18,11 +21,70 @@ import { UpdateUserDto } from '../dto/update-user.dto';
 import { User } from '../entities/user.entity';
 import { Roles } from '../../auth/decorators/roles.decorator';
 import { UserRole } from '../entities/user.entity';
+import { AssignTeamDto } from '../dto/assign-team.dto';
 
 @ApiTags('users')
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Lấy thông tin profile của người dùng hiện tại' })
+  @ApiResponse({ status: 200, description: 'Trả về thông tin profile thành công' })
+  @ApiBearerAuth()
+  async getProfile(@Request() req) {
+    return this.userService.findById(req.user.id);
+  }
+
+  @Get('profile/with-teams')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Lấy thông tin profile người dùng hiện tại kèm theo teams' })
+  @ApiResponse({ status: 200, description: 'Trả về thông tin profile và teams thành công' })
+  @ApiBearerAuth()
+  async getProfileWithTeams(@Request() req) {
+    return this.userService.findByIdWithTeams(req.user.id);
+  }
+
+  @Get(':id/with-teams')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Lấy thông tin người dùng kèm theo teams' })
+  @ApiResponse({ status: 200, description: 'Trả về thông tin người dùng và teams thành công' })
+  @ApiBearerAuth()
+  findOneWithTeams(@Param('id') id: string) {
+    return this.userService.findByIdWithTeams(id);
+  }
+
+  @Post(':id/teams')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Gán người dùng vào team' })
+  @ApiResponse({ status: 200, description: 'Người dùng đã được gán vào team' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy người dùng hoặc team' })
+  @ApiBearerAuth()
+  assignToTeam(@Param('id') id: string, @Body() assignTeamDto: AssignTeamDto) {
+    return this.userService.assignToTeam(id, assignTeamDto.teamId);
+  }
+
+  @Delete(':id/teams/:teamId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Xóa người dùng khỏi team' })
+  @ApiResponse({ status: 200, description: 'Người dùng đã được xóa khỏi team' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy người dùng hoặc team' })
+  @ApiBearerAuth()
+  removeFromTeam(@Param('id') id: string, @Param('teamId') teamId: string) {
+    return this.userService.removeFromTeam(id, teamId);
+  }
+
+  @Get('by-team/:teamId')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Lấy danh sách người dùng trong team' })
+  @ApiResponse({ status: 200, description: 'Trả về danh sách người dùng thành công' })
+  @ApiBearerAuth()
+  getUsersByTeam(@Param('teamId') teamId: string) {
+    return this.userService.findByTeamId(teamId);
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)

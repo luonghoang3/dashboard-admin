@@ -51,9 +51,11 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const bcrypt = __importStar(require("bcrypt"));
 const user_entity_1 = require("../entities/user.entity");
+const team_entity_1 = require("../../team/entities/team.entity");
 let UserService = class UserService {
-    constructor(usersRepository) {
+    constructor(usersRepository, teamsRepository) {
         this.usersRepository = usersRepository;
+        this.teamsRepository = teamsRepository;
     }
     async findAll() {
         return this.usersRepository.find();
@@ -65,8 +67,53 @@ let UserService = class UserService {
         }
         return user;
     }
+    async findByIdWithTeams(id) {
+        const user = await this.usersRepository.findOne({
+            where: { id },
+            relations: ['teams']
+        });
+        if (!user) {
+            throw new common_1.NotFoundException(`Không tìm thấy người dùng với ID: ${id}`);
+        }
+        return user;
+    }
     async findByUsername(username) {
         return this.usersRepository.findOne({ where: { username } });
+    }
+    async findByTeamId(teamId) {
+        const team = await this.teamsRepository.findOne({
+            where: { id: teamId },
+            relations: ['users']
+        });
+        if (!team) {
+            throw new common_1.NotFoundException(`Không tìm thấy team với ID: ${teamId}`);
+        }
+        return team.users;
+    }
+    async assignToTeam(userId, teamId) {
+        const user = await this.findByIdWithTeams(userId);
+        const team = await this.teamsRepository.findOne({ where: { id: teamId } });
+        if (!team) {
+            throw new common_1.NotFoundException(`Không tìm thấy team với ID: ${teamId}`);
+        }
+        const isAlreadyAssigned = user.teams && user.teams.some(t => t.id === teamId);
+        if (isAlreadyAssigned) {
+            throw new common_1.ConflictException(`Người dùng đã được gán vào team này`);
+        }
+        if (!user.teams) {
+            user.teams = [];
+        }
+        user.teams.push(team);
+        return this.usersRepository.save(user);
+    }
+    async removeFromTeam(userId, teamId) {
+        const user = await this.findByIdWithTeams(userId);
+        const teamIndex = user.teams ? user.teams.findIndex(t => t.id === teamId) : -1;
+        if (teamIndex === -1) {
+            throw new common_1.NotFoundException(`Người dùng không thuộc team này`);
+        }
+        user.teams.splice(teamIndex, 1);
+        return this.usersRepository.save(user);
     }
     async create(createUserDto) {
         const userExists = await this.usersRepository.findOne({
@@ -150,6 +197,8 @@ exports.UserService = UserService;
 exports.UserService = UserService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __param(1, (0, typeorm_1.InjectRepository)(team_entity_1.Team)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository])
 ], UserService);
 //# sourceMappingURL=user.service.js.map

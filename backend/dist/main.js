@@ -16,6 +16,7 @@ async function bootstrap() {
         transform: true,
         forbidNonWhitelisted: true,
     }));
+    app.useGlobalInterceptors(new common_1.ClassSerializerInterceptor(app.get('Reflector')));
     const config = new swagger_1.DocumentBuilder()
         .setTitle('Dashboard Admin API')
         .setDescription('API documentation for Dashboard Admin')

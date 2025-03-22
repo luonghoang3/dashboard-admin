@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
@@ -19,6 +19,9 @@ async function bootstrap() {
     transform: true,
     forbidNonWhitelisted: true,
   }));
+  
+  // Use ClassSerializerInterceptor to handle @Exclude() decorators
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get('Reflector')));
   
   // Swagger API documentation
   const config = new DocumentBuilder()

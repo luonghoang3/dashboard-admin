@@ -5,12 +5,15 @@ import * as bcrypt from 'bcrypt';
 import { User, UserRole } from '../entities/user.entity';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UpdateUserDto } from '../dto/update-user.dto';
+import { Team } from '../../team/entities/team.entity';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(Team)
+    private teamsRepository: Repository<Team>,
   ) {}
 
   async findAll(): Promise<User[]> {
@@ -27,8 +30,74 @@ export class UserService {
     return user;
   }
 
+  async findByIdWithTeams(id: string): Promise<User> {
+    const user = await this.usersRepository.findOne({ 
+      where: { id },
+      relations: ['teams']
+    });
+    
+    if (!user) {
+      throw new NotFoundException(`Không tìm thấy người dùng với ID: ${id}`);
+    }
+    
+    return user;
+  }
+
   async findByUsername(username: string): Promise<User> {
     return this.usersRepository.findOne({ where: { username } });
+  }
+
+  async findByTeamId(teamId: string): Promise<User[]> {
+    const team = await this.teamsRepository.findOne({
+      where: { id: teamId },
+      relations: ['users']
+    });
+
+    if (!team) {
+      throw new NotFoundException(`Không tìm thấy team với ID: ${teamId}`);
+    }
+
+    return team.users;
+  }
+
+  async assignToTeam(userId: string, teamId: string): Promise<User> {
+    const user = await this.findByIdWithTeams(userId);
+    const team = await this.teamsRepository.findOne({ where: { id: teamId } });
+
+    if (!team) {
+      throw new NotFoundException(`Không tìm thấy team với ID: ${teamId}`);
+    }
+
+    // Kiểm tra xem user đã được gán vào team chưa
+    const isAlreadyAssigned = user.teams && user.teams.some(t => t.id === teamId);
+    if (isAlreadyAssigned) {
+      throw new ConflictException(`Người dùng đã được gán vào team này`);
+    }
+
+    // Khởi tạo mảng teams nếu chưa có
+    if (!user.teams) {
+      user.teams = [];
+    }
+
+    // Gán user vào team
+    user.teams.push(team);
+    
+    return this.usersRepository.save(user);
+  }
+
+  async removeFromTeam(userId: string, teamId: string): Promise<User> {
+    const user = await this.findByIdWithTeams(userId);
+    
+    // Kiểm tra xem user có trong team không
+    const teamIndex = user.teams ? user.teams.findIndex(t => t.id === teamId) : -1;
+    if (teamIndex === -1) {
+      throw new NotFoundException(`Người dùng không thuộc team này`);
+    }
+
+    // Xóa team khỏi user
+    user.teams.splice(teamIndex, 1);
+    
+    return this.usersRepository.save(user);
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {

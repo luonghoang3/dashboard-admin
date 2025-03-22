@@ -22,9 +22,28 @@ const create_user_dto_1 = require("../dto/create-user.dto");
 const update_user_dto_1 = require("../dto/update-user.dto");
 const roles_decorator_1 = require("../../auth/decorators/roles.decorator");
 const user_entity_1 = require("../entities/user.entity");
+const assign_team_dto_1 = require("../dto/assign-team.dto");
 let UserController = class UserController {
     constructor(userService) {
         this.userService = userService;
+    }
+    async getProfile(req) {
+        return this.userService.findById(req.user.id);
+    }
+    async getProfileWithTeams(req) {
+        return this.userService.findByIdWithTeams(req.user.id);
+    }
+    findOneWithTeams(id) {
+        return this.userService.findByIdWithTeams(id);
+    }
+    assignToTeam(id, assignTeamDto) {
+        return this.userService.assignToTeam(id, assignTeamDto.teamId);
+    }
+    removeFromTeam(id, teamId) {
+        return this.userService.removeFromTeam(id, teamId);
+    }
+    getUsersByTeam(teamId) {
+        return this.userService.findByTeamId(teamId);
     }
     create(createUserDto) {
         return this.userService.create(createUserDto);
@@ -81,6 +100,78 @@ let UserController = class UserController {
     }
 };
 exports.UserController = UserController;
+__decorate([
+    (0, common_1.Get)('profile'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Lấy thông tin profile của người dùng hiện tại' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Trả về thông tin profile thành công' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserController.prototype, "getProfile", null);
+__decorate([
+    (0, common_1.Get)('profile/with-teams'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Lấy thông tin profile người dùng hiện tại kèm theo teams' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Trả về thông tin profile và teams thành công' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserController.prototype, "getProfileWithTeams", null);
+__decorate([
+    (0, common_1.Get)(':id/with-teams'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Lấy thông tin người dùng kèm theo teams' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Trả về thông tin người dùng và teams thành công' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], UserController.prototype, "findOneWithTeams", null);
+__decorate([
+    (0, common_1.Post)(':id/teams'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN),
+    (0, swagger_1.ApiOperation)({ summary: 'Gán người dùng vào team' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Người dùng đã được gán vào team' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Không tìm thấy người dùng hoặc team' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, assign_team_dto_1.AssignTeamDto]),
+    __metadata("design:returntype", void 0)
+], UserController.prototype, "assignToTeam", null);
+__decorate([
+    (0, common_1.Delete)(':id/teams/:teamId'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_decorator_1.Roles)(user_entity_1.UserRole.ADMIN),
+    (0, swagger_1.ApiOperation)({ summary: 'Xóa người dùng khỏi team' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Người dùng đã được xóa khỏi team' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Không tìm thấy người dùng hoặc team' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Param)('teamId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], UserController.prototype, "removeFromTeam", null);
+__decorate([
+    (0, common_1.Get)('by-team/:teamId'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Lấy danh sách người dùng trong team' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Trả về danh sách người dùng thành công' }),
+    (0, swagger_1.ApiBearerAuth)(),
+    __param(0, (0, common_1.Param)('teamId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], UserController.prototype, "getUsersByTeam", null);
 __decorate([
     (0, common_1.Post)(),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
