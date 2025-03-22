@@ -1,152 +1,110 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { authService } from '../services/authService';
-
-interface User {
-  id: string;
-  username: string;
-  email: string;
-  fullName: string;
-  role: string;
-  avatar?: string | null;
-}
+import { User } from '../../dashboard/services/userService';
 
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (username: string, password: string) => Promise<void>;
+  register: (email: string, password: string, username: string, fullName: string) => Promise<void>;
   logout: () => void;
-  checkAuth: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
 
-  // Kiểm tra trạng thái xác thực khi khởi tạo
+  // Kiểm tra xác thực khi ứng dụng khởi chạy
   useEffect(() => {
-    console.log('AuthProvider initializing...');
-    
     const checkAuthentication = async () => {
       try {
-        // Lấy token từ localStorage hoặc cookie
-        const storedToken = authService.getToken();
+        setIsLoading(true);
         
-        if (!storedToken) {
-          console.log('No token found, user not authenticated');
-          setIsLoading(false);
-          return;
-        }
+        // Kiểm tra xác thực bằng token
+        const token = authService.getToken();
         
-        console.log('Token found, setting token state');
-        setToken(storedToken);
-        
-        // Lấy thông tin user profile
-        try {
-          console.log('Fetching user profile with token');
-          const userData = await authService.getProfile(storedToken);
-          console.log('User profile fetched successfully');
-          setUser(userData);
-        } catch (error) {
-          console.error('Failed to fetch user profile:', error);
-          // Nếu token không hợp lệ, xóa token
-          authService.removeToken();
-          setToken(null);
+        if (token) {
+          console.log('Token được tìm thấy, đang lấy thông tin người dùng...');
+          try {
+            // Lấy thông tin user từ API
+            const userData = await authService.getProfile();
+            setUser(userData);
+            console.log('Lấy thông tin người dùng thành công:', userData);
+          } catch (error) {
+            console.error('Lỗi khi lấy thông tin người dùng:', error);
+            // Xóa token nếu không hợp lệ hoặc hết hạn
+            authService.logout();
+            setUser(null);
+          }
+        } else {
+          console.log('Không tìm thấy token, người dùng chưa đăng nhập');
+          setUser(null);
         }
       } catch (error) {
-        console.error('Auth check error:', error);
+        console.error('Lỗi khi kiểm tra xác thực:', error);
+        setUser(null);
       } finally {
         setIsLoading(false);
-        console.log('AuthProvider initialization complete');
       }
     };
 
     checkAuthentication();
   }, []);
 
-  const login = async (username: string, password: string) => {
-    setIsLoading(true);
-    console.log('Login process started in AuthContext');
-    
+  // Đăng nhập
+  const login = async (username: string, password: string): Promise<void> => {
     try {
-      const data = await authService.login(username, password);
-      console.log('Login API call succeeded, got data:', data?.user?.username);
-      
-      // Lưu token - đã được lưu trong authService.login
-      setToken(data.accessToken);
-      
-      // Cập nhật thông tin user
+      setIsLoading(true);
+      const data = await authService.login({ username, password });
       setUser(data.user);
-      
-      console.log('Login process completed successfully');
     } catch (error) {
-      console.error('Login failed in AuthContext:', error);
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    console.log('Logging out user');
-    
-    // Xóa token
-    authService.removeToken();
-    
-    // Cập nhật state
-    setToken(null);
-    setUser(null);
-    
-    console.log('User logged out, redirecting to login page');
-    
-    // Chuyển hướng đến trang đăng nhập - sử dụng window.location để refresh
-    window.location.href = '/login';
-  };
-
-  const checkAuth = async (): Promise<boolean> => {
-    if (!token) return false;
-    
+  // Đăng ký
+  const register = async (email: string, password: string, username: string, fullName: string): Promise<void> => {
     try {
-      await authService.getProfile(token);
-      return true;
+      setIsLoading(true);
+      const data = await authService.register({ email, password, username, fullName });
+      setUser(data.user);
     } catch (error) {
-      return false;
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Debug output
-  console.log('AuthContext state:', {
-    isAuthenticated: !!token && !!user,
-    hasToken: !!token,
-    hasUser: !!user,
-    isLoading
-  });
+  // Đăng xuất
+  const logout = () => {
+    authService.logout();
+    setUser(null);
+    window.location.href = '/login';
+  };
 
   const value = {
     user,
-    token,
-    isAuthenticated: !!token && !!user,
+    isAuthenticated: !!user,
     isLoading,
     login,
+    register,
     logout,
-    checkAuth,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 }; 

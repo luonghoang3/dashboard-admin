@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import ClientProviders from './providers';
+import { NextUIProvider } from '@nextui-org/react';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -16,11 +17,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi">
+    <html lang="vi" className="light">
       <body className={inter.className}>
-        <ClientProviders>
-          {children}
-        </ClientProviders>
+        <NextUIProvider>
+          <ClientProviders>
+            {children}
+          </ClientProviders>
+        </NextUIProvider>
       </body>
     </html>
   );

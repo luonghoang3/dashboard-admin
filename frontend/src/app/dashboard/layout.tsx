@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { useAuth } from '@/modules/auth/context/AuthContext';
 
 export default function DashboardLayout({
@@ -9,36 +8,14 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated, isLoading, logout } = useAuth();
-  const router = useRouter();
-  const [redirected, setRedirected] = useState(false);
+  const { isAuthenticated, isLoading, logout, user } = useAuth();
 
-  useEffect(() => {
-    // Nếu đã tải xong và không đăng nhập, chuyển hướng đến trang đăng nhập
-    if (!isLoading && !isAuthenticated && !redirected) {
-      setRedirected(true);
-      console.log('Không xác thực, chuyển hướng đến trang đăng nhập');
-      window.location.href = '/login';
-    }
-  }, [isLoading, isAuthenticated, redirected]);
-
-  // Hiển thị trạng thái tải
+  // Hiển thị loading nếu đang kiểm tra auth
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <p className="text-2xl font-semibold">Đang tải...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Nếu không xác thực, không hiển thị nội dung
-  if (!isAuthenticated) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <p className="text-2xl font-semibold">Đang chuyển đến trang đăng nhập...</p>
         </div>
       </div>
     );
@@ -81,7 +58,12 @@ export default function DashboardLayout({
         <header className="bg-white shadow">
           <div className="flex justify-between items-center px-6 py-4">
             <h1 className="text-2xl font-semibold">Dashboard</h1>
-            <div>
+            <div className="flex items-center gap-4">
+              {user && (
+                <span className="text-gray-600">
+                  Xin chào, {user.fullName || user.username}
+                </span>
+              )}
               <button 
                 onClick={logout}
                 className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
